@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Lumina AI — In-Browser Qwen Chat</title>
+  <meta name="description" content="A private, fully in-browser AI chat powered by Qwen 2.5 and Transformers.js. No API keys. No servers. Zero data leaves your device." />
+  <meta name="theme-color" content="#0a0a0b" />
+
+  <!-- Preconnect for Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+
+  <link rel="stylesheet" href="./style.css" />
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════════════
+     LOADING SCREEN
+═══════════════════════════════════════════════════════ -->
+<div id="loading-screen" role="status" aria-live="polite">
+  <div class="loading-gem">
+    <div class="gem-inner"></div>
+  </div>
+
+  <div class="loading-brand">
+    <h1>Lumina <span>AI</span></h1>
+    <p>Powered by Qwen · Runs entirely in your browser</p>
+  </div>
+
+  <div class="loading-progress-wrap">
+    <div class="progress-bar-track">
+      <div class="progress-bar-fill" id="progress-fill"></div>
+    </div>
+    <div class="progress-label" id="progress-label">Connecting to Hugging Face model hub…</div>
+    <div class="progress-hint">
+      First run downloads ~350 MB to your browser cache. Subsequent loads are instant.
+    </div>
+  </div>
+
+  <!-- Retry button — shown only on error -->
+  <button id="retry-btn" onclick="location.reload()" style="display:none;"
+    aria-label="Retry loading the model">
+    ↺ Retry
+  </button>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════
+     APP SHELL
+═══════════════════════════════════════════════════════ -->
+<div id="app">
+
+  <!-- ── SIDEBAR ────────────────────────────────────────── -->
+  <aside id="sidebar" aria-label="Sidebar">
+    <div class="sidebar-header">
+      <div class="brand">
+        <span class="brand-name">Lumina <em>AI</em></span>
+      </div>
+      <div class="brand-tag">In-Browser · Private · Zero Latency</div>
+    </div>
+
+    <div class="sidebar-scroll">
+
+      <!-- Model Info -->
+      <div class="sidebar-card">
+        <div class="card-title">Active Model</div>
+        <div class="model-badge">
+          <div class="model-status-dot" id="model-status-dot" title="Model status"></div>
+          <div class="model-info-text">
+            <div class="model-name" id="model-name">Loading…</div>
+            <div class="model-meta">WebGPU · Quantized Q4 · Local</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- System Prompt / Persona -->
+      <div class="sidebar-card">
+        <div class="card-title">AI Persona</div>
+        <textarea
+          id="system-prompt"
+          aria-label="System prompt"
+          placeholder="Describe how the AI should behave…"
+          rows="4"
+        ></textarea>
+        <button class="btn-sm" id="save-prompt-btn" aria-label="Apply persona">Apply Persona</button>
+      </div>
+
+      <!-- Future Prospects -->
+      <div class="sidebar-card">
+        <div class="card-title">Roadmap &amp; Future Features</div>
+        <div class="prospects-list" id="prospects-root"></div>
+      </div>
+
+    </div>
+  </aside>
+
+  <!-- ── MAIN CHAT ──────────────────────────────────────── -->
+  <main id="main">
+
+    <!-- Chat Header -->
+    <header id="chat-header">
+      <div style="display:flex;align-items:center;gap:0.75rem;">
+        <button id="sidebar-toggle" aria-label="Toggle sidebar" title="Toggle sidebar">☰</button>
+        <div class="chat-header-title">
+          <span>New</span> Conversation
+        </div>
+      </div>
+      <div class="header-actions">
+        <button class="icon-btn" id="clear-btn" title="Clear conversation" aria-label="Clear conversation">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="3 6 5 6 21 6"/>
+            <path d="M19 6l-1 14H6L5 6"/>
+            <path d="M10 11v6M14 11v6"/>
+            <path d="M9 6V4h6v2"/>
+          </svg>
+        </button>
+      </div>
+    </header>
+
+    <!-- Messages Container -->
+    <div id="messages" role="log" aria-label="Conversation" aria-live="polite">
+
+      <!-- Empty / Welcome State -->
+      <div id="empty-state" aria-hidden="true">
+        <div class="empty-gem">✦</div>
+        <h2 class="empty-title">Good evening,<br><span>what shall we explore?</span></h2>
+        <p class="empty-subtitle">
+          Your conversations stay entirely on this device.<br>
+          No cloud. No tracking. Pure intelligence.
+        </p>
+        <div class="empty-chips">
+          <button class="chip" data-prompt="Explain quantum entanglement in simple terms.">Quantum entanglement</button>
+          <button class="chip" data-prompt="Write a short poem about the beauty of mathematics.">Write a poem</button>
+          <button class="chip" data-prompt="What are the top 5 principles of good software design?">Software principles</button>
+          <button class="chip" data-prompt="Give me a morning routine optimised for deep focus and creativity.">Morning routine</button>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Input Bar -->
+    <div id="input-bar">
+      <div class="input-wrap">
+        <textarea
+          id="user-input"
+          placeholder="Message Lumina…"
+          rows="1"
+          aria-label="Message input"
+          autocomplete="off"
+          spellcheck="true"
+          disabled
+        ></textarea>
+
+        <!-- Stop Button -->
+        <button id="stop-btn" aria-label="Stop generation" title="Stop generating">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+            <rect x="5" y="5" width="14" height="14" rx="2"/>
+          </svg>
+        </button>
+
+        <!-- Send Button -->
+        <button id="send-btn" disabled aria-label="Send message" title="Send (Enter)">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="22" y1="2" x2="11" y2="13"/>
+            <polygon points="22 2 15 22 11 13 2 9 22 2"/>
+          </svg>
+        </button>
+      </div>
+      <p class="input-hint">Enter to send · Shift+Enter for newline · Runs fully in-browser via WebGPU</p>
+    </div>
+
+  </main>
+</div>
+
+<script type="module" src="./app.js"></script>
+</body>
+</html>
