@@ -152,7 +152,7 @@ async function generate(messages) {
 // ─── Message router ──────────────────────────────────────────────────────────
 self.addEventListener("message", async ({ data: { type, data } }) => {
     if (type === "load") { 
-        await transformersPromise();
+        await transformersPromise;
         loadModel(); 
     }
     else if (type === "generate") generate(data.messages);
