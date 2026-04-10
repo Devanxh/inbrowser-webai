@@ -471,6 +471,8 @@ $chipBtns.forEach(chip => {
 
 // ─── Render Prospects ─────────────────────────────────────────────────────────
 function renderProspects() {
+  if (!$prospectsRoot) return;
+
   PROSPECTS.forEach(({ phase, icon, items }) => {
     const block = document.createElement("div");
 
