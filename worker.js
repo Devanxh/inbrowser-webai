@@ -24,7 +24,7 @@ async function initTransformers() {
         self.postMessage({ type: "error", data: `Failed to import transformers.js: ${err.message ?? String(err)}` });
     }
 }
-initTransformers();
+const transformersPromise = initTransformers();
 
 
 // ─── Aggregate download tracker ───────────────────────────────────────────────
@@ -150,8 +150,11 @@ async function generate(messages) {
 }
 
 // ─── Message router ──────────────────────────────────────────────────────────
-self.addEventListener("message", ({ data: { type, data } }) => {
-    if (type === "load") loadModel();
+self.addEventListener("message", async ({ data: { type, data } }) => {
+    if (type === "load") { 
+        await transformersPromise();
+        loadModel(); 
+    }
     else if (type === "generate") generate(data.messages);
     else if (type === "abort") {
         // Model interrupt can be tricky inside a worker, omitted for stability.
