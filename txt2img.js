@@ -241,8 +241,8 @@ async function ensureModelLoaded() {
   const res = await client.load(
     selectedModel,
     { 
-      backendPreference: ['webgpu'],
-      ort // Inject ONNX Runtime
+      backendPreference: ['webgpu']
+      // ort removed to avoid DataCloneError; worker will load it via dynamic import
     },
     (p) => {
       const msg = p.message ?? p.phase ?? 'Loading';

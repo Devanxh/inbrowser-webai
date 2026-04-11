@@ -31,7 +31,7 @@ export default defineConfig({
 
   // Do not pre-bundle packages that ship their own chunked ESM builds
   optimizeDeps: {
-    exclude: ['web-txt2img', '@xenova/transformers', '@huggingface/transformers', 'onnxruntime-web'],
+    exclude: ['@xenova/transformers', '@huggingface/transformers'],
   },
 
   // Required CORS headers so browsers allow SharedArrayBuffer usage needed by ONNX/wasm
