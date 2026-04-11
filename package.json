@@ -20,6 +20,8 @@
   },
   "devDependencies": {
     "@vitejs/plugin-react": "^6.0.1",
-    "vite": "^8.0.8"
+    "onnxruntime-web": "^1.19.2",
+    "vite": "^8.0.8",
+    "vite-plugin-static-copy": "^4.0.1"
   }
 }

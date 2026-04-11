@@ -1,8 +1,20 @@
 import { defineConfig } from 'vite';
 import path from 'path';
+import { viteStaticCopy } from 'vite-plugin-static-copy';
 
 export default defineConfig({
   // Multi-page app: serve both the chat page and the txt2img page
+  plugins: [
+    viteStaticCopy({
+      targets: [
+        {
+          src: 'node_modules/onnxruntime-web/dist/*.wasm',
+          dest: 'onnx',
+          flatten: true
+        }
+      ]
+    })
+  ],
   build: {
     rollupOptions: {
       input: {
@@ -19,7 +31,7 @@ export default defineConfig({
 
   // Do not pre-bundle packages that ship their own chunked ESM builds
   optimizeDeps: {
-    exclude: ['web-txt2img', '@xenova/transformers', '@huggingface/transformers'],
+    exclude: ['web-txt2img', '@xenova/transformers', '@huggingface/transformers', 'onnxruntime-web'],
   },
 
   // Required CORS headers so browsers allow SharedArrayBuffer usage needed by ONNX/wasm

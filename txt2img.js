@@ -5,6 +5,11 @@
  */
 
 import { Txt2ImgWorkerClient } from 'web-txt2img';
+import * as ort from 'onnxruntime-web';
+
+// Configure ONNX Runtime Web WASM paths
+// This tells the library where to find the .wasm files copied by viteStaticCopy
+ort.env.wasm.wasmPaths = '/onnx/node_modules/onnxruntime-web/dist/';
 
 // ─── DOM References ────────────────────────────────────────────────────────────
 const $webgpuWarning    = document.getElementById('webgpu-warning');
@@ -235,7 +240,10 @@ async function ensureModelLoaded() {
 
   const res = await client.load(
     selectedModel,
-    { backendPreference: ['webgpu'] },
+    { 
+      backendPreference: ['webgpu'],
+      ort // Inject ONNX Runtime
+    },
     (p) => {
       const msg = p.message ?? p.phase ?? 'Loading';
       setProgress({ ...p, message: msg });
