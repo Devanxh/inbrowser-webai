@@ -207,7 +207,7 @@ let _dlLastLoaded = 0;
 let _dlLastTime = null;
 
 function initWorker() {
-  worker = new Worker("./worker.js", { type: "module" });
+  worker = new Worker(new URL("./worker.js", import.meta.url), { type: "module" });
 
   worker.addEventListener("message", (event) => {
     const { type, data } = event.data;
