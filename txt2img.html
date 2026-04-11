@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Lumina AI — Text to Image</title>
+  <meta name="description" content="Generate images from text prompts entirely in your browser using SD-Turbo or Janus-Pro-1B via WebGPU. No API keys. No servers." />
+  <meta name="theme-color" content="#0a0a0b" />
+
+  <!-- Preconnect for Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+
+  <!-- Shared design system -->
+  <link rel="stylesheet" href="./style.css" />
+  <!-- txt2img-specific styles -->
+  <link rel="stylesheet" href="./txt2img.css" />
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════════════
+     APP SHELL
+═══════════════════════════════════════════════════════ -->
+<div id="t2i-app">
+
+  <!-- ── SIDEBAR ─────────────────────────────────────────── -->
+  <aside id="t2i-sidebar" aria-label="Sidebar">
+    <div class="sidebar-header">
+      <div class="brand">
+        <span class="brand-name">Lumina <em>AI</em></span>
+      </div>
+      <div class="brand-tag">Text to Image · WebGPU · In-Browser</div>
+    </div>
+
+    <div class="sidebar-scroll">
+
+      <!-- Back to Chat -->
+      <a href="./index.html" class="back-link" id="back-link" aria-label="Go back to AI Chat">
+        <span class="back-link-icon">←</span>
+        <span>Back to Chat</span>
+      </a>
+
+      <!-- Model Info Card -->
+      <div class="sidebar-card">
+        <div class="card-title">Active Model</div>
+        <div class="model-badge">
+          <div class="model-status-dot" id="t2i-model-status-dot" title="Model status"></div>
+          <div class="model-info-text">
+            <div class="model-name" id="t2i-model-name">No model loaded</div>
+            <div class="model-meta" id="t2i-model-meta">Select a model to begin</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Capabilities Card -->
+      <div class="sidebar-card">
+        <div class="card-title">Browser Capabilities</div>
+        <div style="display:flex;flex-direction:column;gap:0.5rem;font-size:0.78rem;">
+          <div style="display:flex;justify-content:space-between;align-items:center;">
+            <span style="color:var(--text-secondary)">WebGPU</span>
+            <span id="cap-webgpu" style="color:var(--text-muted)">Checking…</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;">
+            <span style="color:var(--text-secondary)">Shader F16</span>
+            <span id="cap-f16" style="color:var(--text-muted)">Checking…</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- How It Works Card -->
+      <div class="sidebar-card">
+        <div class="card-title">About</div>
+        <p style="font-size:0.76rem;color:var(--text-muted);line-height:1.65;">
+          Images are generated entirely in your browser using WebGPU. No data is sent to any server. Models are cached locally after first download.
+        </p>
+        <div style="margin-top:0.75rem;font-size:0.72rem;color:var(--text-muted);display:flex;flex-direction:column;gap:0.35rem;">
+          <div>📦 <strong style="color:var(--text-secondary)">SD-Turbo</strong> — ~700 MB first run</div>
+          <div>📦 <strong style="color:var(--text-secondary)">Janus-Pro-1B</strong> — ~1.4 GB first run</div>
+        </div>
+      </div>
+
+    </div>
+  </aside>
+
+  <!-- ── MAIN AREA ──────────────────────────────────────── -->
+  <main id="t2i-main">
+
+    <!-- Header -->
+    <header id="t2i-header">
+      <div style="display:flex;align-items:center;gap:0.75rem;">
+        <button id="t2i-sidebar-toggle" aria-label="Toggle sidebar" title="Toggle sidebar">☰</button>
+        <div class="t2i-header-title">
+          <span>Image</span> Studio
+        </div>
+      </div>
+      <div style="font-size:0.7rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--text-muted);">
+        WebGPU · In-Browser · Private
+      </div>
+    </header>
+
+    <!-- Scrollable Content -->
+    <div id="t2i-content">
+
+      <!-- WebGPU Warning -->
+      <div id="webgpu-warning" role="alert">
+        <span class="warning-icon">⚠</span>
+        <span>
+          <strong>WebGPU not detected.</strong> Your browser may not support WebGPU, or it may be disabled.
+          Try Chrome 113+ or Edge 113+ with WebGPU enabled. Image generation may not work.
+        </span>
+      </div>
+
+      <!-- Model Selection -->
+      <div class="form-section">
+        <div class="form-label">Choose Model</div>
+        <div class="model-pills" id="model-pills">
+          <button class="model-pill active" data-model="sd-turbo" id="pill-sd-turbo">
+            <span class="model-pill-name">SD-Turbo</span>
+            <span class="model-pill-meta">~700 MB · Fast · 512×512</span>
+          </button>
+          <button class="model-pill" data-model="janus-pro-1b" id="pill-janus">
+            <span class="model-pill-name">Janus-Pro-1B</span>
+            <span class="model-pill-meta">~1.4 GB · High quality</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Prompt -->
+      <div class="form-section">
+        <label class="form-label" for="t2i-prompt">Prompt</label>
+        <textarea
+          id="t2i-prompt"
+          placeholder="Describe the image you want to create… e.g. 'A glowing neon city at night, cyberpunk, ultra detailed'"
+          rows="3"
+          aria-label="Image prompt"
+          spellcheck="true"
+        ></textarea>
+      </div>
+
+      <!-- Seed -->
+      <div class="form-section">
+        <div class="form-label">Seed (optional)</div>
+        <div class="seed-row">
+          <label for="t2i-seed">Seed value:</label>
+          <input type="number" id="t2i-seed" placeholder="Random" min="0" max="2147483647" aria-label="Random seed" />
+          <button class="seed-random-btn" id="t2i-randomize-btn" title="Pick random seed">🎲 Random</button>
+        </div>
+      </div>
+
+      <!-- Action Bar -->
+      <div class="action-bar">
+        <button id="t2i-generate-btn" aria-label="Generate image">
+          <span>✦</span>
+          <span id="t2i-generate-label">Generate Image</span>
+        </button>
+        <button id="t2i-stop-btn" aria-label="Stop generation">
+          ◼ Stop
+        </button>
+      </div>
+
+      <!-- Progress Area -->
+      <div id="t2i-progress-area" role="status" aria-live="polite">
+        <div style="display:flex;align-items:center;justify-content:space-between;">
+          <div class="t2i-status-badge">
+            <div class="status-dot"></div>
+            <span id="t2i-status-text">Preparing…</span>
+          </div>
+          <div style="font-size:0.7rem;color:var(--text-muted)" id="t2i-speed-text"></div>
+        </div>
+        <div class="t2i-progress-track">
+          <div class="t2i-progress-fill" id="t2i-progress-fill"></div>
+        </div>
+        <div class="t2i-progress-label" id="t2i-progress-label">Initializing…</div>
+      </div>
+
+      <!-- Error -->
+      <div class="t2i-error" id="t2i-error" role="alert">
+        <span>⚠</span>
+        <span id="t2i-error-text"></span>
+      </div>
+
+      <!-- Output Card -->
+      <div id="t2i-output-card" aria-label="Generated image output">
+        <!-- Placeholder -->
+        <div class="output-placeholder" id="t2i-placeholder">
+          <div class="placeholder-icon">✦</div>
+          <div class="placeholder-text">Your image will appear here</div>
+          <div class="placeholder-sub">
+            Enter a prompt above and click Generate. The model will download on first use.
+          </div>
+        </div>
+
+        <!-- Shimmer while generating -->
+        <div class="generating-shimmer" id="t2i-shimmer">
+          <div class="shimmer-gem">
+            <div class="shimmer-gem-icon">◆</div>
+            <div class="shimmer-gem-text">Generating…</div>
+          </div>
+        </div>
+
+        <!-- Generated image -->
+        <img id="t2i-output-img" alt="Generated image" />
+
+        <!-- Actions row -->
+        <div id="t2i-output-actions">
+          <div class="output-meta" id="t2i-output-meta"></div>
+          <a id="t2i-download-btn" download="lumina-image.png" aria-label="Download generated image">
+            ↓ Download
+          </a>
+        </div>
+      </div>
+
+    </div><!-- /#t2i-content -->
+  </main>
+</div><!-- /#t2i-app -->
+
+<script type="module" src="./txt2img.js"></script>
+</body>
+</html>

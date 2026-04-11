@@ -4,12 +4,17 @@
   "description": "",
   "main": "app.js",
   "scripts": {
+    "dev": "vite",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "dependencies": {},
+  "dependencies": {
+    "@huggingface/transformers": "^3.8.1",
+    "@xenova/transformers": "^2.17.2",
+    "web-txt2img": "^0.3.1"
+  },
   "devDependencies": {
     "@vitejs/plugin-react": "^6.0.1",
     "vite": "^8.0.8"
