@@ -8,8 +8,8 @@
 let transformers = null;
 
 // ─── Model config ─────────────────────────────────────────────────────────────
-const MODEL_ID = "onnx-community/Qwen2.5-0.5B-Instruct";  // ~350 MB q4
-const MODEL_OPTS = { dtype: "q4", device: "webgpu" };
+const MODEL_ID = "onnx-community/Bonsai-1.7B-ONNX";  // ~350 MB q4
+const MODEL_OPTS = { dtype: "q1", device: "webgpu" };
 
 let tokenizer = null;
 let model = null;
